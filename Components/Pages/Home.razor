@@ -1,0 +1,41 @@
+@page "/"
+<h1>⚡ Consumo de Energia</h1>
+<p>Estime o consumo mensal por aparelho e seu custo na tarifa informada. Dados locais nesta sessão.</p>
+<section>
+ <h2>Tarifa e período</h2>
+ <label>Tarifa (R$/kWh) <input type="number" min="0" step="0.01" @bind="tariff" /></label>
+ <label>Dias <input type="number" min="1" max="366" @bind="days" /></label>
+</section>
+<section>
+ <h2>Adicionar aparelho</h2>
+ <label>Nome <input @bind="name" maxlength="80" placeholder="Ventilador" /></label>
+ <label>Potência (W) <input type="number" min="0.01" step="0.01" @bind="watts" /></label>
+ <label>Horas por dia <input type="number" min="0" max="24" step="0.5" @bind="hours" /></label>
+ <button @onclick="Add">Adicionar</button>
+ @if (!string.IsNullOrEmpty(error)) { <p role="alert" class="error">@error</p> }
+</section>
+<section>
+ <h2>Estimativa</h2>
+ <table><thead><tr><th>Aparelho</th><th>kWh</th><th>Custo (R$)</th><th></th></tr></thead><tbody>
+ @for(int i=0;i<appliances.Count;i++){ var idx=i; var item=appliances[i];
+ <tr><td>@item.Name</td><td>@(SafeKwh(item).ToString("N2"))</td><td>@(SafeCost(item).ToString("N2"))</td><td><button @onclick="() => Remove(idx)">Excluir</button></td></tr>
+ }
+ </tbody><tfoot><tr><th>Total</th><th>@(appliances.Sum(SafeKwh).ToString("N2"))</th><th>@(appliances.Sum(SafeCost).ToString("N2"))</th><th></th></tr></tfoot></table>
+</section>
+@code {
+ private List<Appliance> appliances=new();
+ private string name="";
+ private decimal watts=100m,hours=5m,tariff=0.85m;
+ private int days=30;
+ private string error="";
+ private decimal SafeKwh(Appliance a)=>days is >=1 and <=366 ? EnergyCalculator.Kwh(a,days):0m;
+ private decimal SafeCost(Appliance a)=>tariff>=0m ? SafeKwh(a)*tariff:0m;
+ private void Add(){
+  try {
+   var item=new Appliance(name.Trim(),watts,hours);
+   _=EnergyCalculator.Cost(item,days,tariff);
+   appliances.Add(item);name="";error="";
+  }catch(Exception e) when(e is ArgumentException){error=e.Message;}
+ }
+ private void Remove(int i){appliances.RemoveAt(i);}
+}
