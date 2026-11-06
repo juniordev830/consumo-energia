@@ -1,48 +1,28 @@
-# Consumo de Energia
+# Consumo de Energia — Blazor MVP
 
-> Status: concepção. Este repositório contém apenas o escopo inicial; ainda não há aplicação executável ou funcionalidades implementadas.
+Aplicação web em **C# / .NET 8 / Blazor Server** para cadastrar aparelhos, simular consumo e estimar o valor mensal da energia.
 
-## Ideia
+## Implementado
+- Nome, potência em watts e horas de uso por dia por aparelho.
+- Tarifa de energia (R$/kWh) e número de dias configuráveis.
+- Tabela com kWh e custo individual, totais e remoção.
+- Validação: potência positiva, horas entre 0 e 24, dias de 1 a 366, tarifa não negativa.
 
-Estimar o consumo mensal de aparelhos e comparar cenários de uso.
+Cálculo: `kWh = (watts/1000) × horas/dia × dias`. Exemplo: **100 W × 5 horas × 30 dias = 15 kWh**.
 
-## Primeira versão planejada
+## Rodar
+Requer SDK .NET 8:
+```bash
+dotnet run --project ConsumoEnergia.csproj
+```
+Abra a URL local exibida no terminal.
 
-- [ ] Cadastrar potência e horas de uso de um aparelho.
-- [ ] Informar tarifa por kWh.
-- [ ] Exibir estimativa mensal por aparelho e total.
+## Validar
+```bash
+dotnet build ConsumoEnergia.csproj -c Release
+dotnet run --project tests/RulesCheck/RulesCheck.csproj
+```
+O GitHub Actions executa as duas verificações.
 
-## Modelo inicial
-
-Aparelho, perfil de uso e tarifa.
-
-## Regras e limites
-
-Calcular kWh = watts / 1000 × horas/dia × dias; tarifa informada pelo usuário, sem consulta externa.
-
-Escopo mantido pequeno: sem pagamentos, integrações externas, infraestrutura de produção ou uso de dados pessoais reais nesta etapa.
-
-## Tecnologia proposta
-
-C# + .NET + Blazor.
-
-A escolha é uma proposta para a futura implementação; nenhuma dependência foi instalada e a tecnologia ainda não foi implementada.
-
-## Critério de conclusão do primeiro incremento
-
-Um aparelho de 100 W usado 5 h/dia por 30 dias deve resultar em 15 kWh.
-
-## Próximos passos
-
-1. Revisar este escopo antes de começar a implementação.
-2. Preparar o ambiente mínimo da tecnologia escolhida.
-3. Implementar um fluxo completo e validar o critério acima.
-4. Documentar a execução e acrescentar exemplos demonstrativos.
-
-## Possíveis evoluções
-
-Depois de validar o fluxo principal, avaliar persistência, acessibilidade e uma interface mais completa conforme a plataforma. Evoluções não fazem parte da entrega atual.
-
-## Como executar
-
-Ainda não há comandos de execução. Eles serão adicionados quando existir uma primeira versão funcional.
+## Limitações
+Estimativa informativa; não mede consumo real. Dados só durante a sessão e sem banco de dados nesta versão; o histórico persistente pode ser implementado posteriormente.
