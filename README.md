@@ -1,48 +1,48 @@
 # Consumo de Energia
 
-> Status: concepção. Este repositório contém apenas o escopo inicial; ainda não há aplicação executável ou funcionalidades implementadas.
+MVP em **C# / .NET 8** para estimar o consumo mensal por aparelho e comparar o custo total.
 
-## Ideia
+## Funcionalidades
 
-Estimar o consumo mensal de aparelhos e comparar cenários de uso.
+- Recebe um cenario JSON com tarifa informada pelo usuario, potencia em watts, horas por dia e dias de uso.
+- Calcula kWh = W / 1000 × horas/dia × dias para cada aparelho.
+- Calcula custo em reais com arredondamento monetario por aparelho e total como soma desses valores.
+- Valida dados negativos, dias fora de 1 a 31, horas acima de 24, nomes vazios e duplicados.
+- Gera relatorio JSON, sem banco de dados, contas, coleta de dados ou consulta a tarifas externas.
 
-## Primeira versão planejada
+## Limites de entrada
 
-- [ ] Cadastrar potência e horas de uso de um aparelho.
-- [ ] Informar tarifa por kWh.
-- [ ] Exibir estimativa mensal por aparelho e total.
+Cada cenário deve ser um arquivo JSON regular com no máximo **1 MB**
+(1.000.000 bytes). O programa verifica o tamanho antes de ler o conteúdo
+e rejeita arquivos maiores. Esse limite também se aplica aos dois cenários
+passados no modo de comparação.
 
-## Modelo inicial
+## Executar
 
-Aparelho, perfil de uso e tarifa.
+Instale o SDK .NET 8 e execute na raiz:
 
-## Regras e limites
+```bash
+dotnet run --project src/ConsumoEnergia -- examples/cenario.json
+dotnet run --project src/ConsumoEnergia -- --self-test
+```
 
-Calcular kWh = watts / 1000 × horas/dia × dias; tarifa informada pelo usuário, sem consulta externa.
+Os exemplos sao ficticios e podem ser alterados. Em um aparelho de **100 W** usado **5 h/dia** durante **30 dias**, o resultado e **15 kWh**. Com tarifa de R$ 0,80 por kWh, custo estimado de **R$ 12,00**.
 
-Escopo mantido pequeno: sem pagamentos, integrações externas, infraestrutura de produção ou uso de dados pessoais reais nesta etapa.
+## CI e limites
 
-## Tecnologia proposta
+Executa compilacao Release, sete verificacoes internas e exemplos de relatorio e comparacao no GitHub Actions.
 
-C# + .NET + Blazor.
+Estimativas nao consideram impostos, bandeiras tarifarias, potencia variavel ou tarifas escalonadas. Valores sao aproximados e dependem dos dados informados.
 
-A escolha é uma proposta para a futura implementação; nenhuma dependência foi instalada e a tecnologia ainda não foi implementada.
+Proximas etapas: persistencia local, interface acessivel e avaliacao de Blazor.
 
-## Critério de conclusão do primeiro incremento
 
-Um aparelho de 100 W usado 5 h/dia por 30 dias deve resultar em 15 kWh.
+## Comparar dois cenários
 
-## Próximos passos
+O comparador recebe **dois arquivos JSON** e mostra o consumo e custo anterior, o novo valor e a diferença para cada aparelho (inclusive quando existe em apenas um cenário).
 
-1. Revisar este escopo antes de começar a implementação.
-2. Preparar o ambiente mínimo da tecnologia escolhida.
-3. Implementar um fluxo completo e validar o critério acima.
-4. Documentar a execução e acrescentar exemplos demonstrativos.
+```bash
+dotnet run --project src/ConsumoEnergia -- --compare examples/cenario.json examples/cenario-economico.json
+```
 
-## Possíveis evoluções
-
-Depois de validar o fluxo principal, avaliar persistência, acessibilidade e uma interface mais completa conforme a plataforma. Evoluções não fazem parte da entrega atual.
-
-## Como executar
-
-Ainda não há comandos de execução. Eles serão adicionados quando existir uma primeira versão funcional.
+**Diferença = novo − anterior**. Portanto, valores negativos representam redução de consumo ou despesa. O custo depende da tarifa informada em cada cenário; é possível testar a troca de tarifa e o tempo de utilização sem alterar dados anteriores. Resultados são estimativas, não uma promessa de economia na conta real.
