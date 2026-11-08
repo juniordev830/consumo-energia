@@ -1,0 +1,17 @@
+{
+  "tarifaPorKwh": 0.8,
+  "aparelhos": [
+    {
+      "nome": "Lampada LED",
+      "watts": 10,
+      "horasPorDia": 5,
+      "dias": 30
+    },
+    {
+      "nome": "Ventilador",
+      "watts": 100,
+      "horasPorDia": 8,
+      "dias": 30
+    }
+  ]
+}
