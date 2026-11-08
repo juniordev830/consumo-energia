@@ -10,6 +10,13 @@ MVP em **C# / .NET 8** para estimar o consumo mensal por aparelho e comparar o c
 - Valida dados negativos, dias fora de 1 a 31, horas acima de 24, nomes vazios e duplicados.
 - Gera relatorio JSON, sem banco de dados, contas, coleta de dados ou consulta a tarifas externas.
 
+## Limites de entrada
+
+Cada cenário deve ser um arquivo JSON regular com no máximo **1 MB**
+(1.000.000 bytes). O programa verifica o tamanho antes de ler o conteúdo
+e rejeita arquivos maiores. Esse limite também se aplica aos dois cenários
+passados no modo de comparação.
+
 ## Executar
 
 Instale o SDK .NET 8 e execute na raiz:
