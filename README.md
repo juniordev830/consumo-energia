@@ -23,8 +23,19 @@ Os exemplos sao ficticios e podem ser alterados. Em um aparelho de **100 W** usa
 
 ## CI e limites
 
-Executa compilacao Release, quatro casos de teste internos e exemplo no GitHub Actions.
+Executa compilacao Release, sete verificacoes internas e exemplos de relatorio e comparacao no GitHub Actions.
 
 Estimativas nao consideram impostos, bandeiras tarifarias, potencia variavel ou tarifas escalonadas. Valores sao aproximados e dependem dos dados informados.
 
-Proximas etapas: persistencia local, comparacao de dois cenarios, interface acessivel e avaliacao de Blazor.
+Proximas etapas: persistencia local, interface acessivel e avaliacao de Blazor.
+
+
+## Comparar dois cenários
+
+O comparador recebe **dois arquivos JSON** e mostra o consumo e custo anterior, o novo valor e a diferença para cada aparelho (inclusive quando existe em apenas um cenário).
+
+```bash
+dotnet run --project src/ConsumoEnergia -- --compare examples/cenario.json examples/cenario-economico.json
+```
+
+**Diferença = novo − anterior**. Portanto, valores negativos representam redução de consumo ou despesa. O custo depende da tarifa informada em cada cenário; é possível testar a troca de tarifa e o tempo de utilização sem alterar dados anteriores. Resultados são estimativas, não uma promessa de economia na conta real.
