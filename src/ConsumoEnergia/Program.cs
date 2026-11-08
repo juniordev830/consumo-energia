@@ -52,27 +52,43 @@ public static class Program
             if (args.Length == 1 && args[0] == "--self-test")
             {
                 SelfTest();
-                Console.WriteLine("4 cenarios OK");
+                Console.WriteLine("7 cenarios OK");
                 return 0;
             }
-            if (args.Length != 1) throw new ArgumentException("Uso: dotnet run --project src/ConsumoEnergia -- examples/cenario.json");
-            var text = File.ReadAllText(args[0]);
             var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
             {
                 PropertyNameCaseInsensitive = true,
                 NumberHandling = JsonNumberHandling.Strict
             };
-            var scenario = JsonSerializer.Deserialize<Cenario>(text, options)
-                ?? throw new ArgumentException("Esperado objeto JSON de cenario.");
-            var report = Estimador.Calcular(scenario);
-            Console.WriteLine(JsonSerializer.Serialize(report, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
-            return 0;
+            var outputOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
+            if (args.Length == 1)
+            {
+                var scenario = ReadScenario(args[0], options);
+                Console.WriteLine(JsonSerializer.Serialize(Estimador.Calcular(scenario), outputOptions));
+                return 0;
+            }
+            if (args.Length == 3 && args[0] == "--compare")
+            {
+                var before = ReadScenario(args[1], options);
+                var after = ReadScenario(args[2], options);
+                Console.WriteLine(JsonSerializer.Serialize(ComparadorCenarios.Comparar(before, after), outputOptions));
+                return 0;
+            }
+            throw new ArgumentException(
+                "Uso: dotnet run --project src/ConsumoEnergia -- CENARIO.json | --compare ANTES.json DEPOIS.json");
         }
         catch (Exception error) when (error is ArgumentException or IOException or JsonException or OverflowException)
         {
             Console.Error.WriteLine("Erro: " + error.Message);
             return 2;
         }
+    }
+
+    private static Cenario ReadScenario(string path, JsonSerializerOptions options)
+    {
+        var text = File.ReadAllText(path);
+        return JsonSerializer.Deserialize<Cenario>(text, options)
+            ?? throw new ArgumentException("Esperado objeto JSON de cenario.");
     }
 
     private static void Assert(bool condition)
@@ -98,6 +114,23 @@ public static class Program
             new("A", 100m, 1m, 30),
             new("a", 100m, 1m, 30)
         }))));
+        var before = new Cenario(1m, new List<Aparelho> {
+            new("A", 1000m, 1m, 30)
+        });
+        var after = new Cenario(0.8m, new List<Aparelho> {
+            new("A", 500m, 1m, 30),
+            new("B", 100m, 2m, 30)
+        });
+        var comparison = ComparadorCenarios.Comparar(before, after);
+        Assert(comparison.DiferencaTotalKwh == -9m && comparison.DiferencaTotalCusto == -13.2m);
+        Assert(comparison.PorAparelho.Count == 2 &&
+            comparison.PorAparelho[0].Nome == "A" &&
+            comparison.PorAparelho[0].DiferencaCusto == -18m &&
+            comparison.PorAparelho[1].Nome == "B" &&
+            comparison.PorAparelho[1].CustoAnterior == 0m);
+        Assert(Throws(() => ComparadorCenarios.Comparar(before,
+            new Cenario(-1m, new List<Aparelho> { new("A", 10m, 1m, 1) }))));
+
     }
 
     private static bool Throws(Action action)
