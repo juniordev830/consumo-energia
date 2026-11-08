@@ -1,48 +1,30 @@
 # Consumo de Energia
 
-> Status: concepção. Este repositório contém apenas o escopo inicial; ainda não há aplicação executável ou funcionalidades implementadas.
+MVP em **C# / .NET 8** para estimar o consumo mensal por aparelho e comparar o custo total.
 
-## Ideia
+## Funcionalidades
 
-Estimar o consumo mensal de aparelhos e comparar cenários de uso.
+- Recebe um cenario JSON com tarifa informada pelo usuario, potencia em watts, horas por dia e dias de uso.
+- Calcula kWh = W / 1000 × horas/dia × dias para cada aparelho.
+- Calcula custo em reais com arredondamento monetario por aparelho e total como soma desses valores.
+- Valida dados negativos, dias fora de 1 a 31, horas acima de 24, nomes vazios e duplicados.
+- Gera relatorio JSON, sem banco de dados, contas, coleta de dados ou consulta a tarifas externas.
 
-## Primeira versão planejada
+## Executar
 
-- [ ] Cadastrar potência e horas de uso de um aparelho.
-- [ ] Informar tarifa por kWh.
-- [ ] Exibir estimativa mensal por aparelho e total.
+Instale o SDK .NET 8 e execute na raiz:
 
-## Modelo inicial
+```bash
+dotnet run --project src/ConsumoEnergia -- examples/cenario.json
+dotnet run --project src/ConsumoEnergia -- --self-test
+```
 
-Aparelho, perfil de uso e tarifa.
+Os exemplos sao ficticios e podem ser alterados. Em um aparelho de **100 W** usado **5 h/dia** durante **30 dias**, o resultado e **15 kWh**. Com tarifa de R$ 0,80 por kWh, custo estimado de **R$ 12,00**.
 
-## Regras e limites
+## CI e limites
 
-Calcular kWh = watts / 1000 × horas/dia × dias; tarifa informada pelo usuário, sem consulta externa.
+Executa compilacao Release, quatro casos de teste internos e exemplo no GitHub Actions.
 
-Escopo mantido pequeno: sem pagamentos, integrações externas, infraestrutura de produção ou uso de dados pessoais reais nesta etapa.
+Estimativas nao consideram impostos, bandeiras tarifarias, potencia variavel ou tarifas escalonadas. Valores sao aproximados e dependem dos dados informados.
 
-## Tecnologia proposta
-
-C# + .NET + Blazor.
-
-A escolha é uma proposta para a futura implementação; nenhuma dependência foi instalada e a tecnologia ainda não foi implementada.
-
-## Critério de conclusão do primeiro incremento
-
-Um aparelho de 100 W usado 5 h/dia por 30 dias deve resultar em 15 kWh.
-
-## Próximos passos
-
-1. Revisar este escopo antes de começar a implementação.
-2. Preparar o ambiente mínimo da tecnologia escolhida.
-3. Implementar um fluxo completo e validar o critério acima.
-4. Documentar a execução e acrescentar exemplos demonstrativos.
-
-## Possíveis evoluções
-
-Depois de validar o fluxo principal, avaliar persistência, acessibilidade e uma interface mais completa conforme a plataforma. Evoluções não fazem parte da entrega atual.
-
-## Como executar
-
-Ainda não há comandos de execução. Eles serão adicionados quando existir uma primeira versão funcional.
+Proximas etapas: persistencia local, comparacao de dois cenarios, interface acessivel e avaliacao de Blazor.
