@@ -52,7 +52,7 @@ public static class Program
             if (args.Length == 1 && args[0] == "--self-test")
             {
                 SelfTest();
-                Console.WriteLine("7 cenarios OK");
+                Console.WriteLine("Testes internos OK");
                 return 0;
             }
             var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
@@ -84,9 +84,22 @@ public static class Program
         }
     }
 
+    private const long MaxScenarioBytes = 1_000_000;
+
     private static Cenario ReadScenario(string path, JsonSerializerOptions options)
     {
+        if (!File.Exists(path))
+            throw new ArgumentException("Caminho deve apontar para um arquivo JSON existente.");
+
+        var file = new FileInfo(path);
+        if (file.Length > MaxScenarioBytes)
+            throw new ArgumentException("Cenario excede limite de 1 MB.");
+
         var text = File.ReadAllText(path);
+        // Validate again in case the file changed during reading.
+        if (System.Text.Encoding.UTF8.GetByteCount(text) > MaxScenarioBytes)
+            throw new ArgumentException("Cenario excede limite de 1 MB.");
+
         return JsonSerializer.Deserialize<Cenario>(text, options)
             ?? throw new ArgumentException("Esperado objeto JSON de cenario.");
     }
@@ -130,6 +143,20 @@ public static class Program
             comparison.PorAparelho[1].CustoAnterior == 0m);
         Assert(Throws(() => ComparadorCenarios.Comparar(before,
             new Cenario(-1m, new List<Aparelho> { new("A", 10m, 1m, 1) }))));
+
+        // The CLI must reject oversized input before JSON deserialization.
+        var oversizedPath = Path.Combine(Path.GetTempPath(), "energia-" + Guid.NewGuid() + ".json");
+        try
+        {
+            File.WriteAllText(oversizedPath, new string(' ', 1_000_001));
+            var readOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+            Assert(Throws(() => ReadScenario(oversizedPath, readOptions)));
+        }
+        finally
+        {
+            if (File.Exists(oversizedPath))
+                File.Delete(oversizedPath);
+        }
 
     }
 
