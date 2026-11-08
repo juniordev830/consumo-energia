@@ -18,3 +18,4 @@ jobs:
       - run: dotnet build src/ConsumoEnergia/ConsumoEnergia.csproj --configuration Release
       - run: dotnet run --project src/ConsumoEnergia/ConsumoEnergia.csproj --configuration Release -- --self-test
       - run: dotnet run --project src/ConsumoEnergia/ConsumoEnergia.csproj --configuration Release -- examples/cenario.json
+      - run: dotnet run --project src/ConsumoEnergia/ConsumoEnergia.csproj --configuration Release -- --compare examples/cenario.json examples/cenario-economico.json
