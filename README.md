@@ -46,3 +46,13 @@ dotnet run --project src/ConsumoEnergia -- --compare examples/cenario.json examp
 ```
 
 **Diferença = novo − anterior**. Portanto, valores negativos representam redução de consumo ou despesa. O custo depende da tarifa informada em cada cenário; é possível testar a troca de tarifa e o tempo de utilização sem alterar dados anteriores. Resultados são estimativas, não uma promessa de economia na conta real.
+
+## Planejar um limite de gastos mensais
+
+Uma análise opcional compara a estimativa de consumo com um **orçamento mensal em reais** fornecido por você e mostra saldo previsto, percentual utilizado e os três aparelhos com maior custo estimado.
+
+```bash
+dotnet run --project src/ConsumoEnergia -- --budget examples/cenario.json 100.00
+```
+
+Use ponto para separar os centavos (ex.: `100.00`). O limite deve ficar entre R$ 0,01 e R$ 1.000.000,00. Saldo negativo indica ultrapassagem da meta. O ranking serve para revisão dos dados de consumo e **não** recomenda desligar equipamentos essenciais. O programa não acessa contas de energia, não altera tarifas e não promete redução real dos custos.
