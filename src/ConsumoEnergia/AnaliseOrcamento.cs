@@ -18,8 +18,8 @@ public static class AnaliseOrcamento
     public static RelatorioOrcamento Analisar(Relatorio relatorio, decimal limiteMensal)
     {
         ArgumentNullException.ThrowIfNull(relatorio);
-        if (limiteMensal <= 0 || limiteMensal > 1_000_000m)
-            throw new ArgumentException("Orcamento deve ser maior que zero e ate R$ 1.000.000,00.");
+        if (limiteMensal < 0.01m || limiteMensal > 1_000_000m)
+            throw new ArgumentException("Orcamento deve ser entre R$ 0,01 e R$ 1.000.000,00.");
         if (relatorio.CustoTotal < 0 || relatorio.Aparelhos is null)
             throw new ArgumentException("Relatorio de consumo invalido.");
 
