@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -74,8 +75,20 @@ public static class Program
                 Console.WriteLine(JsonSerializer.Serialize(ComparadorCenarios.Comparar(before, after), outputOptions));
                 return 0;
             }
+            if (args.Length == 3 && args[0] == "--budget")
+            {
+                if (!decimal.TryParse(args[2], NumberStyles.AllowDecimalPoint,
+                        CultureInfo.InvariantCulture, out var limit))
+                    throw new ArgumentException("Use um orcamento numerico em reais, com ponto decimal.");
+
+                var scenario = ReadScenario(args[1], options);
+                var estimate = Estimador.Calcular(scenario);
+                Console.WriteLine(JsonSerializer.Serialize(
+                    AnaliseOrcamento.Analisar(estimate, limit), outputOptions));
+                return 0;
+            }
             throw new ArgumentException(
-                "Uso: dotnet run --project src/ConsumoEnergia -- CENARIO.json | --compare ANTES.json DEPOIS.json");
+                "Uso: dotnet run --project src/ConsumoEnergia -- CENARIO.json | --compare ANTES.json DEPOIS.json | --budget CENARIO.json LIMITE_REAIS");
         }
         catch (Exception error) when (error is ArgumentException or IOException or JsonException or OverflowException)
         {
@@ -120,6 +133,21 @@ public static class Program
             new("B", 500m, 2m, 30)
         }));
         Assert(multiple.TotalKwh == 60m && multiple.CustoTotal == 60m);
+        var budget = AnaliseOrcamento.Analisar(report, 10m);
+        Assert(budget.AcimaDoLimite && budget.SaldoPrevisto == -2m &&
+            budget.PercentualUtilizado == 120m &&
+            budget.MaioresCustos.Count == 1 && budget.MaioresCustos[0].Nome == "Lampada");
+        var budgetInside = AnaliseOrcamento.Analisar(report, 20m);
+        Assert(!budgetInside.AcimaDoLimite && budgetInside.SaldoPrevisto == 8m &&
+            budgetInside.PercentualUtilizado == 60m);
+        var topCosts = AnaliseOrcamento.Analisar(multiple, 100m);
+        Assert(topCosts.MaioresCustos.Count == 2 &&
+            topCosts.MaioresCustos[0].Nome == "A" &&
+            topCosts.MaioresCustos[1].Nome == "B");
+        Assert(Throws(() => AnaliseOrcamento.Analisar(report, 0m)));
+        Assert(Throws(() => AnaliseOrcamento.Analisar(report, -1m)));
+        Assert(Throws(() => AnaliseOrcamento.Analisar(report, 0.001m)));
+        Assert(Throws(() => AnaliseOrcamento.Analisar(report, 1_000_001m)));
         Assert(Throws(() => Estimador.Calcular(new Cenario(1m, new List<Aparelho> {
             new("A", 100m, 25m, 30)
         }))));
