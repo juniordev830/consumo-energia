@@ -87,8 +87,18 @@ public static class Program
                     AnaliseOrcamento.Analisar(estimate, limit), outputOptions));
                 return 0;
             }
+            if (args.Length == 4 && args[0] == "--simulate")
+            {
+                if (!decimal.TryParse(args[3], NumberStyles.AllowDecimalPoint,
+                        CultureInfo.InvariantCulture, out var hours))
+                    throw new ArgumentException("Horas devem ser numero entre 0 e 24, com ponto decimal.");
+                var scenario = ReadScenario(args[1], options);
+                Console.WriteLine(JsonSerializer.Serialize(
+                    SimuladorHoras.Simular(scenario, args[2], hours), outputOptions));
+                return 0;
+            }
             throw new ArgumentException(
-                "Uso: dotnet run --project src/ConsumoEnergia -- CENARIO.json | --compare ANTES.json DEPOIS.json | --budget CENARIO.json LIMITE_REAIS");
+                "Uso: dotnet run --project src/ConsumoEnergia -- CENARIO.json | --compare ANTES.json DEPOIS.json | --budget CENARIO.json LIMITE_REAIS | --simulate CENARIO.json APARELHO NOVAS_HORAS");
         }
         catch (Exception error) when (error is ArgumentException or IOException or JsonException or OverflowException)
         {
@@ -144,6 +154,24 @@ public static class Program
         Assert(topCosts.MaioresCustos.Count == 2 &&
             topCosts.MaioresCustos[0].Nome == "A" &&
             topCosts.MaioresCustos[1].Nome == "B");
+        var usageScenario = new Cenario(0.8m, new List<Aparelho> {
+            new("Lampada", 100m, 5m, 30),
+            new("Ventilador", 200m, 8m, 30)
+        });
+        var usageSimulation = SimuladorHoras.Simular(usageScenario, " lampada ", 2m);
+        Assert(usageSimulation.Aparelho == "Lampada" &&
+            usageSimulation.HorasOriginais == 5m &&
+            usageSimulation.HorasSimuladas == 2m &&
+            usageSimulation.Comparacao.DiferencaTotalKwh == -9m &&
+            usageSimulation.Comparacao.DiferencaTotalCusto == -7.2m);
+        Assert(usageScenario.Aparelhos[0].HorasPorDia == 5m &&
+            usageScenario.Aparelhos[1].HorasPorDia == 8m);
+        var noChange = SimuladorHoras.Simular(usageScenario, "Lampada", 5m);
+        Assert(noChange.Comparacao.DiferencaTotalCusto == 0m);
+        Assert(Throws(() => SimuladorHoras.Simular(usageScenario, "Inexistente", 5m)));
+        Assert(Throws(() => SimuladorHoras.Simular(usageScenario, "Lampada", -1m)));
+        Assert(Throws(() => SimuladorHoras.Simular(usageScenario, "Lampada", 25m)));
+
         Assert(Throws(() => AnaliseOrcamento.Analisar(report, 0m)));
         Assert(Throws(() => AnaliseOrcamento.Analisar(report, -1m)));
         Assert(Throws(() => AnaliseOrcamento.Analisar(report, 0.001m)));
