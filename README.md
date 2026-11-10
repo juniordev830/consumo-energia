@@ -14,7 +14,10 @@ MVP em **C# / .NET 8** para estimar o consumo mensal por aparelho e comparar o c
 
 Cada cenário deve ser um arquivo JSON regular com no máximo **1 MB**
 (1.000.000 bytes). O programa verifica o tamanho antes de ler o conteúdo
-e rejeita arquivos maiores. Esse limite também se aplica aos dois cenários
+e rejeita arquivos maiores. Os documentos devem usar **UTF-8 válido**: bytes
+inválidos são rejeitados, evitando substituir silenciosamente caracteres em
+nomes dos aparelhos. O BOM UTF-8 é aceito, mas arquivos UTF-16/UTF-32 não são
+interpretados como JSON UTF-8. Esse limite também se aplica aos dois cenários
 passados no modo de comparação.
 
 ## Executar
