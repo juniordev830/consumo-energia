@@ -118,7 +118,9 @@ public static class Program
         if (file.Length > MaxScenarioBytes)
             throw new ArgumentException("Cenario excede limite de 1 MB.");
 
-        var text = File.ReadAllText(path);
+        // Reject malformed UTF-8 instead of silently replacing bytes with U+FFFD,
+        // which could corrupt appliance names while still producing valid JSON.
+        var text = File.ReadAllText(path, new System.Text.UTF8Encoding(false, true));
         // Validate again in case the file changed during reading.
         if (System.Text.Encoding.UTF8.GetByteCount(text) > MaxScenarioBytes)
             throw new ArgumentException("Cenario excede limite de 1 MB.");
@@ -212,6 +214,30 @@ public static class Program
         {
             if (File.Exists(oversizedPath))
                 File.Delete(oversizedPath);
+        }
+
+        // A damaged UTF-8 byte inside an otherwise valid JSON string must be
+        // rejected, not silently converted to a replacement character.
+        var encodingPath = Path.Combine(Path.GetTempPath(), "energia-utf8-" + Guid.NewGuid() + ".json");
+        try
+        {
+            var readOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+            var validText = "{\\"tarifaPorKwh\\":1,\\"aparelhos\\":[{\\"nome\\":\\"Lâmpada\\",\\"watts\\":100,\\"horasPorDia\\":1,\\"dias\\":1}]}";
+            File.WriteAllText(encodingPath, validText, new System.Text.UTF8Encoding(false, true));
+            Assert(ReadScenario(encodingPath, readOptions).Aparelhos[0].Nome == "Lâmpada");
+
+            var malformed = System.Text.Encoding.UTF8.GetBytes(
+                "{\\"tarifaPorKwh\\":1,\\"aparelhos\\":[{\\"nome\\":\\"X\\",\\"watts\\":100,\\"horasPorDia\\":1,\\"dias\\":1}]}");
+            var invalidByteIndex = Array.IndexOf(malformed, (byte)'X');
+            Assert(invalidByteIndex >= 0);
+            malformed[invalidByteIndex] = 0xFF;
+            File.WriteAllBytes(encodingPath, malformed);
+            Assert(Throws(() => ReadScenario(encodingPath, readOptions)));
+        }
+        finally
+        {
+            if (File.Exists(encodingPath))
+                File.Delete(encodingPath);
         }
 
     }
