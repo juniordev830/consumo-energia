@@ -120,7 +120,13 @@ public static class Program
 
         // Reject malformed UTF-8 instead of silently replacing bytes with U+FFFD,
         // which could corrupt appliance names while still producing valid JSON.
-        var text = File.ReadAllText(path, new System.Text.UTF8Encoding(false, true));
+        using var reader = new StreamReader(
+            path, new System.Text.UTF8Encoding(false, true),
+            detectEncodingFromByteOrderMarks: false);
+        var text = reader.ReadToEnd();
+        // A UTF-8 BOM is valid; do not auto-detect UTF-16/UTF-32 from their BOMs.
+        if (text.StartsWith('\uFEFF'))
+            text = text[1..];
         // Validate again in case the file changed during reading.
         if (System.Text.Encoding.UTF8.GetByteCount(text) > MaxScenarioBytes)
             throw new ArgumentException("Cenario excede limite de 1 MB.");
@@ -225,6 +231,16 @@ public static class Program
             var validText = """{"tarifaPorKwh":1,"aparelhos":[{"nome":"Lâmpada","watts":100,"horasPorDia":1,"dias":1}]}""";
             File.WriteAllText(encodingPath, validText, new System.Text.UTF8Encoding(false, true));
             Assert(ReadScenario(encodingPath, readOptions).Aparelhos[0].Nome == "Lâmpada");
+
+            var utf8WithBom = System.Text.Encoding.UTF8.GetPreamble()
+                .Concat(System.Text.Encoding.UTF8.GetBytes(validText)).ToArray();
+            File.WriteAllBytes(encodingPath, utf8WithBom);
+            Assert(ReadScenario(encodingPath, readOptions).Aparelhos[0].Nome == "Lâmpada");
+
+            var utf16 = System.Text.Encoding.Unicode.GetPreamble()
+                .Concat(System.Text.Encoding.Unicode.GetBytes(validText)).ToArray();
+            File.WriteAllBytes(encodingPath, utf16);
+            Assert(Throws(() => ReadScenario(encodingPath, readOptions)));
 
             var malformed = System.Text.Encoding.UTF8.GetBytes(
                 """{"tarifaPorKwh":1,"aparelhos":[{"nome":"X","watts":100,"horasPorDia":1,"dias":1}]}""");
