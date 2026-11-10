@@ -222,12 +222,12 @@ public static class Program
         try
         {
             var readOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-            var validText = "{\\"tarifaPorKwh\\":1,\\"aparelhos\\":[{\\"nome\\":\\"Lâmpada\\",\\"watts\\":100,\\"horasPorDia\\":1,\\"dias\\":1}]}";
+            var validText = """{"tarifaPorKwh":1,"aparelhos":[{"nome":"Lâmpada","watts":100,"horasPorDia":1,"dias":1}]}""";
             File.WriteAllText(encodingPath, validText, new System.Text.UTF8Encoding(false, true));
             Assert(ReadScenario(encodingPath, readOptions).Aparelhos[0].Nome == "Lâmpada");
 
             var malformed = System.Text.Encoding.UTF8.GetBytes(
-                "{\\"tarifaPorKwh\\":1,\\"aparelhos\\":[{\\"nome\\":\\"X\\",\\"watts\\":100,\\"horasPorDia\\":1,\\"dias\\":1}]}");
+                """{"tarifaPorKwh":1,"aparelhos":[{"nome":"X","watts":100,"horasPorDia":1,"dias":1}]}""");
             var invalidByteIndex = Array.IndexOf(malformed, (byte)'X');
             Assert(invalidByteIndex >= 0);
             malformed[invalidByteIndex] = 0xFF;
