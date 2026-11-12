@@ -69,3 +69,7 @@ dotnet run --project src/ConsumoEnergia -- --simulate examples/cenario.json Lamp
 ```
 
 O nome do aparelho aceita diferenças entre maiúsculas e minúsculas; as novas horas devem ficar entre **0 e 24**. Uma diferença negativa de custo indica redução estimada, não economia garantida na conta real. Os testes internos abrangem redução, simulação sem alteração, aparelho inexistente e horas inválidas.
+
+## Documentação de desenvolvimento
+
+O [guia de validação e evolução](docs/GUIA_DE_VALIDACAO.md) registra o estado atual, os testes e os próximos incrementos deste projeto.
