@@ -107,32 +107,50 @@ public static class Program
         }
     }
 
-    private const long MaxScenarioBytes = 1_000_000;
+    private const int MaxScenarioBytes = 1_000_000;
 
     private static Cenario ReadScenario(string path, JsonSerializerOptions options)
     {
         if (!File.Exists(path))
             throw new ArgumentException("Caminho deve apontar para um arquivo JSON existente.");
 
-        var file = new FileInfo(path);
+        using var file = File.OpenRead(path);
         if (file.Length > MaxScenarioBytes)
             throw new ArgumentException("Cenario excede limite de 1 MB.");
 
-        // Reject malformed UTF-8 instead of silently replacing bytes with U+FFFD,
-        // which could corrupt appliance names while still producing valid JSON.
-        using var reader = new StreamReader(
-            path, new System.Text.UTF8Encoding(false, true),
-            detectEncodingFromByteOrderMarks: false);
-        var text = reader.ReadToEnd();
-        // A UTF-8 BOM is valid; do not auto-detect UTF-16/UTF-32 from their BOMs.
-        if (text.StartsWith('\uFEFF'))
-            text = text[1..];
-        // Validate again in case the file changed during reading.
-        if (System.Text.Encoding.UTF8.GetByteCount(text) > MaxScenarioBytes)
+        var buffer = new byte[MaxScenarioBytes + 1];
+        var read = file.ReadAtLeast(buffer, buffer.Length, false);
+        if (read > MaxScenarioBytes)
             throw new ArgumentException("Cenario excede limite de 1 MB.");
 
-        return JsonSerializer.Deserialize<Cenario>(text, options)
+        // Accept a UTF-8 BOM and reject malformed bytes before interpreting names.
+        ReadOnlySpan<byte> content = buffer.AsSpan(0, read);
+        if (content.StartsWith("\uFEFF"u8))
+            content = content[3..];
+        var text = new System.Text.UTF8Encoding(false, true).GetString(content);
+        using var document = JsonDocument.Parse(text);
+        ValidateFields(document.RootElement);
+        return document.RootElement.Deserialize<Cenario>(options)
             ?? throw new ArgumentException("Esperado objeto JSON de cenario.");
+    }
+
+    private static void ValidateFields(JsonElement value)
+    {
+        if (value.ValueKind == JsonValueKind.Object)
+        {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var property in value.EnumerateObject())
+            {
+                if (!names.Add(property.Name))
+                    throw new ArgumentException("Campo JSON repetido: " + property.Name);
+                ValidateFields(property.Value);
+            }
+        }
+        else if (value.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in value.EnumerateArray())
+                ValidateFields(item);
+        }
     }
 
     private static void Assert(bool condition)
@@ -248,6 +266,9 @@ public static class Program
             Assert(invalidByteIndex >= 0);
             malformed[invalidByteIndex] = 0xFF;
             File.WriteAllBytes(encodingPath, malformed);
+            Assert(Throws(() => ReadScenario(encodingPath, readOptions)));
+            File.WriteAllText(encodingPath,
+                """{"tarifaPorKwh":1,"aparelhos":[{"nome":"X","watts":20,"WATTS":60,"horasPorDia":1,"dias":1}]}""");
             Assert(Throws(() => ReadScenario(encodingPath, readOptions)));
         }
         finally
