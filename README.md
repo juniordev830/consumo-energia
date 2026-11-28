@@ -2,6 +2,8 @@
 
 MVP em **C# / .NET 8** para estimar o consumo mensal por aparelho e comparar o custo total.
 
+**Navegação** · [Funcionalidades](#funcionalidades) · [Executar](#executar) · [Cenários de uso](#comparar-dois-cenários) · [Guia do código](docs/ENGENHARIA_REVERSA.md)
+
 ## Funcionalidades
 
 - Recebe um cenario JSON com tarifa informada pelo usuario, potencia em watts, horas por dia e dias de uso.
@@ -33,7 +35,7 @@ Os exemplos sao ficticios e podem ser alterados. Em um aparelho de **100 W** usa
 
 ## CI e limites
 
-Executa compilacao Release, sete verificacoes internas e exemplos de relatorio e comparacao no GitHub Actions.
+O [workflow de CI](.github/workflows/ci.yml) compila em Release, executa `--self-test` e roda exemplos de relatório, comparação e orçamento.
 
 Estimativas nao consideram impostos, bandeiras tarifarias, potencia variavel ou tarifas escalonadas. Valores sao aproximados e dependem dos dados informados.
 
@@ -72,4 +74,6 @@ O nome do aparelho aceita diferenças entre maiúsculas e minúsculas; as novas 
 
 ## Documentação de desenvolvimento
 
-O [guia de validação e evolução](docs/GUIA_DE_VALIDACAO.md) registra o estado atual, os testes e os próximos incrementos deste projeto.
+O [guia de validação e evolução](docs/GUIA_DE_VALIDACAO.md) reúne os comandos de verificação e os próximos incrementos. O [guia do código](docs/ENGENHARIA_REVERSA.md) explica os contratos da CLI, os modelos e um roteiro de estudo.
+
+Mantido por [João Junior](https://github.com/juniordev830).
